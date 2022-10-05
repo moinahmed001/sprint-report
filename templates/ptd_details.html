@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Moin Ahmed">
+
+    <title>PTD Details</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/vendor/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="static/vendor/main.css">
+
+    <script>
+            function getEpics(e){
+                var domElement =$(event.target);
+                ptd = domElement.attr('id')
+                $('#issue_details_table').hide();
+                $("#epic_details").html("<tr><td>Loading...</td></tr>");
+                $("#epic_details_table").show()
+                // get all available boards
+                $.get("/api/ptd/epics/"+ getCookie("team_key")+"/" + ptd, function(result){
+                    $("#epic_details").html("");
+                    if (result.length > 0){
+                        $("#epic_details_table").show()
+                        $.each(result, function() {
+                            $("#epic_details").append("<tr><td><a href='#' id='"+this.epic_number+"' onclick='getIssues(this)'>"+this.epic_number+": "+this.epic_title+"</a></td></tr>");
+                        });
+                    } else {
+                        $("#epic_details").html("<tr><td>No epic was found</td></tr>");
+                    }
+                });
+            }
+            function getIssues(e){
+                var domElement =$(event.target);
+                epic_number = domElement.attr('id')
+                $("#issue_details").html("<tr><td colspan='2'>Loading...</td></tr>");
+                $("#issue_details_table").show()
+                // get all available boards
+                $.get("/api/epic_issues/"+ getCookie("team_key")+"/" + epic_number, function(result){
+                    
+                    if (result.length > 0){
+                        $("#issue_details").html("");
+                        var total = 0;
+                        $.each(result, function() {
+                            if(this.issue_number){
+                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.issue_number+"</a></td><td> "+this.estimated+"</td></tr>");
+                                if ($.isNumeric(this.estimated)){
+                                    total = total+this.estimated
+                                }
+                            }
+                            if(this.status_totals){
+                                $.each(this.status_totals, function(){
+                                    $("#issue_details").append("<tr class='table-info'><td>"+this.status+"</td><td> "+this.total+"</td></tr>");
+                                })
+                            }
+                        });
+                        $("#issue_details").append("<tr class='table-success'><td>Total</td><td>"+total+"</td></tr>");
+                    } else {
+                        $("#issue_details").html("<tr><td colspan='2'>No issue was found</td></tr>");
+                    }
+                });
+            }
+    </script>
+</head>
+
+<body>
+
+            {% include 'include/nav.html' %}
+            <h1 class="mt-4">PTD Details</h1>
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm">
+
+                    <input class="form-control" id="myInput" type="text" placeholder="Search..">
+
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <!-- TODO: colour the tab based on the status and show the current status of the PTD -->
+                                <th scope="col">PTD</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="ptd_table">
+                            {% for ptd in ptds %}
+                            <tr>
+                                <td>
+                                    <a href="#" id="{{ptd.ptd}}" onclick="getEpics(this);" class="ptds">
+                                        {{ptd.ptd}}: {{ptd.ptd_title}}</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-bordered table-hover" id="epic_details_table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Epic</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="epic_details">
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-bordered table-hover" id="issue_details_table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Issue</th> 
+                                <th scope="col">Estimate</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="issue_details">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+    {% include 'include/bottom-js.html' %}
+
+    <script>
+        $(document).ready(function(){
+            $("#myInput").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#ptd_table tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+            $('#epic_details_table').hide();
+            $('#issue_details_table').hide();
+        }); 
+    </script>           
+</body>
+
+</html>

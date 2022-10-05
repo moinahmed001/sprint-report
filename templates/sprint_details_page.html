@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Moin Ahmed">
+
+    <title>Sprint Review</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/vendor/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="/static/vendor/main.css">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawVisualization);
+
+    function drawVisualization() {
+        var data = google.visualization.arrayToDataTable([
+            [ 'Project', 'Completed in Sprint', 'Spillover from this Sprint'],
+            {% for project in grouped_ptds %}
+            // '{% autoescape off %}{{project.ptd_title}}{% endautoescape %}'
+            ['{{project.ptd_title}}',{{project.completed_value}},
+            {% if project.not_completed_value %}{{project.not_completed_value}}{% else %}0{% endif %}],
+            {% endfor %}
+        ]);
+
+        var options = {
+            vAxis: {title: 'Points(days)'},
+            seriesType: 'bars',
+            colors: ['green', 'red']
+            // series: {2: {type: 'line'}}
+        };
+
+        var chart = new google.visualization.ComboChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+    }
+</script>
+</head>
+
+<body>
+
+    {% include 'include/nav.html' %}
+    <!-- //TODO: replace all ptd_title with single quote -->
+        <h1 class="mt-4">
+            {% if sprint_tickets.state != "FUTURE" %}
+                <a href="{{sprint_report_url}}" target="_blank">{{sprint_tickets.name}}</a>
+            {% else %}
+                {{sprint_tickets.name}}
+            {% endif %}
+            : <small>({{sprint_tickets.start_date}} to {{sprint_tickets.end_date}})</small></h1>
+        {% if sprint_tickets.state == "ACTIVE" %}
+        <div class="alert alert-danger center_text" role="alert">
+            This sprint is still active, data will change
+        </div>
+        {% endif %}
+        {% if sprint_tickets.state == "FUTURE" %}
+        <div class="alert alert-danger center_text" role="alert">
+            This sprint is in the future, data are not going to be accurate!
+        </div>
+        {% endif %}
+
+
+
+        <div class="container-fluid">
+            <div id="chart_div" style="width: 100%; height: 500px;"></div>
+        </div>
+        <div class="container-fluid">
+            <table class="table table-bordered table-hover">
+                <tbody>
+                    <tr class="table-info">
+                        <th colspan="4" scope="col" class="center_text">{{sprint_tickets.name}}: Overview</th>
+                    </tr>
+                    <tr class="table-active">
+                        <th scope="col">PTD</th>
+                        <th scope="col">Completed total points</th>
+                        <th scope="col">Spillover points to the next sprint</th>
+                    </tr>
+                    {% for project in grouped_ptds %}
+                    <tr>
+                        <td>
+                            {{project.ptd_title}}
+                        </td>
+                        <td>
+                            {{project.completed_value}}
+                        </td>
+                        <td>
+                            {% if project.not_completed_value %}{{project.not_completed_value}}{% else %}0{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="table-secondary">
+                        <td>
+                            Total
+                        <td>
+                            {{total_effort.completed_effort}}
+                        </td>
+                        <td>
+                            {{total_effort.not_completed_effort}}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <table class="table table-bordered table-hover">
+            
+            <thead>
+                <tr class="table-info center_text"><td colspan="4"><strong>Completed Issues</strong></td></tr>
+                <tr>
+                    <th scope="col" style="width: 45%">Issue</th>
+                    <th scope="col" style="width: 5%">Points</th>
+                    <th scope="col" style="width: 32%">Epic</th>
+                    <th scope="col" style="width: 18%">PTD</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in sprint_tickets.completed_tickets %}
+                <tr>
+                    <td><a href="{{url}}/browse/{{issue.ticket_number}}" target="_blank"><u><strong>{{issue.ticket_number}}</strong></u>: {{issue.title}}</a></td>
+                    <td>{{issue.estimate}}</td>
+                    <td>{% if issue.epic_number %}<a href="{{url}}/browse/{{issue.epic_number}}" target="_blank"><u><strong>{{issue.epic_number}}</strong></u>: {{issue.epic_title}}</a>{% endif %}</td>
+                    <td>{% if issue.ptd %}<a href="{{url}}/browse/{{issue.ptd}}" target="_blank"><u><strong>{{issue.ptd}}</strong></u>: {{issue.ptd_title}}</a>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr><td colspan="4" class="table-warning center_text"><strong>Spillover to the next sprint</strong></td></tr>
+                <tr>
+                    <th scope="col" style="width: 45%">Issue</th>
+                    <th scope="col" style="width: 5%">Points</th>
+                    <th scope="col" style="width: 32%">Epic</th>
+                    <th scope="col" style="width: 18%">PTD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in sprint_tickets.not_completed_tickets %}
+                <tr>
+                    <td><a href="{{url}}/browse/{{issue.ticket_number}}" target="_blank"><u><strong>{{issue.ticket_number}}</strong></u>: {{issue.title}}</a></td>
+                    <td>{{issue.estimate}}</td>
+                    <td>{% if issue.epic_number %}<a href="{{url}}/browse/{{issue.epic_number}}" target="_blank"><u><strong>{{issue.epic_number}}</strong></u>: {{issue.epic_title}}</a>{% endif %}</td>
+                    <td>{% if issue.ptd %}<a href="{{url}}/browse/{{issue.ptd}}" target="_blank"><u><strong>{{issue.ptd}}</strong></u>: {{issue.ptd_title}}</a>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% include 'include/bottom-js.html' %}
+
+        <!-- Menu Toggle Script -->
+        <script>
+        $(document).ready(function(){
+
+        });
+        </script>
+
+    </body>
+
+    </html>

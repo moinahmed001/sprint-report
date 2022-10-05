@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Moin Ahmed">
+
+    <title>Epic to PTD mapping</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/vendor/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="static/vendor/main.css">
+</head>
+
+<body>
+
+            {% include 'include/nav.html' %}
+            <h1 class="mt-4">Epics to PTDs mapping</h1>
+            <!-- <h3>TODO: - colour the tab based on the status and show the current status of the PTD</h3> -->
+            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+            <table class="table table-bordered table-hover">
+                <tbody>
+                    <tr>
+                        <th scope="col">Epic</th>
+                        <th scope="col">PTD</th> 
+                    </tr>
+                    {% for epics_to_ptd in epics_to_ptds %}
+                    <tr>
+                        <td>
+                            <a href="{{url}}/browse/{{epics_to_ptd.epic_number}}">
+                                {{epics_to_ptd.epic_number}}: {{epics_to_ptd.epic_title}}</a>
+                        </td>
+                        <td>
+                            {% if epics_to_ptd.ptd %}
+                            <a href="{{url}}/browse/{{epics_to_ptd.ptd}}">
+                                {{epics_to_ptd.ptd}}: {{epics_to_ptd.ptd_title}}</a>
+                                {% else %}&nbsp;{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+    {% include 'include/bottom-js.html' %}
+
+    <!-- Menu Toggle Script -->
+    <script>
+    $(document).ready(function() {
+        $("#myInput").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $(".table tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+    });
+    </script>
+
+</body>
+
+</html>

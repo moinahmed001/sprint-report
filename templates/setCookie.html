@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Moin Ahmed">
+
+    <title>Sprint Review</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/vendor/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="static/vendor/main.css">
+</head>
+
+<body>
+            {% include 'include/nav.html' %}
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">
+                    Choose a team you would like to manage
+                </a>
+                <a href="#" class="alert-danger alert text-center list-group-item-action" id="message">
+
+                </a>
+
+                <a href="#" class="list-group-item list-group-item-action">
+                    <form action="#">
+                        <label for="team_names">Team Name</label>
+                        <input type="text" id="team_names" placeholder="Type the team name" class="input-block-level" title="Type the team you would like to manage" required>
+
+                        <input type="hidden" name="team_id" id="team_id" value="">
+                        <input type="hidden" name="team_name" id="team_name" value="">
+                        <input type="hidden" name="team_key" id="team_key" value="">
+
+                        <label for="team_view_id">Board Name</label>
+                        <select class="form-select" aria-label="Choose a board" name="team_view_id" id="team_view_id">
+                            <option value="0">Choose a board</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </a>
+
+            </div>
+
+
+    {% include 'include/bottom-js.html' %}
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- Menu Toggle Script -->
+    <script>
+    $(function () {
+        var availableTags = [
+            {% for team in teams %}
+            "{{team.team_name}} ({{team.team_key}}) - {{team.team_id}}",
+            {% endfor %}
+        ];
+        $("#team_names").autocomplete({
+            source: availableTags
+        });
+    });
+    $(document).ready(function() {
+        $("#message").hide()
+        $( "form" ).submit(function( event ) {
+            if ( ($("#team_id").val() != "") &&  ($("#team_name").val() != "") && ($("#team_view_id").val() > 0) ) {
+                document.cookie = 'team_id='+ $("#team_id").val();
+                document.cookie = 'team_name='+ $("#team_name").val();
+                document.cookie = 'team_key='+ $("#team_key").val();
+                document.cookie = 'team_view_id='+ $("#team_view_id").val();
+                location.href = '/';
+            } else {
+                $("#message").show()
+                $("#message").text("Please type the team name and choose the respective board!")
+            }
+            event.preventDefault();
+        });
+        $("#team_names").on('focusout', function(){
+            $("#message").hide()
+            splitted = $("#team_names").val().split(" - ")
+            team_name = splitted[0];
+            team_key_reg = /\(([^)]+)\)/.exec(team_name);
+            team_key=team_key_reg[team_key_reg.length - 1];
+            team_id = splitted[splitted.length-1];
+            $("#team_name").val(team_name)
+            $("#team_key").val(team_key)
+            $("#team_id").val(team_id)
+
+            // get all available boards
+            $.get("/api/team_view_id/" + team_id, function(result){
+                $("#team_view_id")
+                .empty()
+                .append('<option value="0" selected>Choose a board!!</option>')
+                ;
+                if (result.length > 0){
+                    $.each(result, function() {
+                        $("#team_view_id").append($("<option />").val(this.team_view_id).text(this.name));
+                    });
+                } else {
+                    $("#team_view_id")
+                    .empty()
+                    .append('<option value="0" selected>No board was found for that team, please create a board on Jira!</option>')
+                    ;
+                }
+            });
+        });
+    });
+    </script>
+
+</body>
+
+</html>

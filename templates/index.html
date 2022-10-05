@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Moin Ahmed">
+
+    <title>All Sprints</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/vendor/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="static/vendor/main.css">
+</head>
+
+<body>
+
+            {% include 'include/nav.html' %}
+
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">
+                    All Sprints
+                </a>
+                {% for sprint in all_sprints.sprints %}
+                    <a href="/sprint/{{sprint.id}}" class="list-group-item list-group-item-action">{{sprint.name}} - {{sprint.state}}</a>
+                {% endfor %}
+            </div>
+
+    {% include 'include/bottom-js.html' %}
+
+    <!-- Menu Toggle Script -->
+    <script>
+    $(document).ready(function() {
+
+    });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+<div class="col-md-1"></div>
+</div>
+
+<!-- Bootstrap core JavaScript -->
+<script src="/static/vendor/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap.bundle.min.js"></script>
+<!-- Placed at the end of the document so the pages load faster -->
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
+<!-- <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script> -->
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js" type="text/javascript"></script>
+
+<script>
+    function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+    found_managing_team_name = getCookie("team_name")
+    if(found_managing_team_name == ""){
+        found_managing_team_name= "No Team selected!"
+    }
+    $("#managing_team_name").text(found_managing_team_name)
+</script>
