@@ -49,8 +49,15 @@ def site_map():
 
 @app.route('/check_team')
 def check_team():
-    teams = normalise_teams(get_all_teams_from_jira())
-    return render_template('setCookie.html', teams=teams)
+    all_teams = get_all_teams_from_jira()
+    error=False
+    if "error" in all_teams:
+        error=True
+        teams=[{"team_name":"Not found", "team_key": 000, "team_id": 000}]
+    else:
+        teams = normalise_teams(all_teams)
+    
+    return render_template('setCookie.html', teams=teams, error=error)
 
 def normalise_teams(teams):
     result = []

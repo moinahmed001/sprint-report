@@ -11,8 +11,6 @@ url = "https://jira.inbcu.com"
 
 
 def get_all_teams_from_jira():
-    print(username)
-    print(password)
     return fetch_url(url + "/rest/api/latest/project", headers=headers)
 
 def get_team_view_id_from_jira(team_id):
