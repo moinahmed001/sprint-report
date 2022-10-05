@@ -1,6 +1,6 @@
 # sprint-report
 pre-requisite:
-- You need to make sure you have pyhton3 with pip3 installed
+- You need to make sure you have python3 with pip3 installed
 - You will need to have a username and auth token, which you have to export using:
 	- export API_PASSWORD=<>
 	- export API_USERNAME=<>
