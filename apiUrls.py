@@ -116,7 +116,7 @@ def create_ticket(issue, all_epics, cookie_team_key):
 
 # gets all unique epics and its ptd
 @api_urls.route('/api/epics/<cookie_team_key>')
-@cache.cached(timeout=1800)
+@cache.cached(timeout=86400)
 def api_get_epics(cookie_team_key=""):
     if cookie_team_key == "":
         cookie_team_key = request.cookies.get('team_key')
@@ -134,6 +134,9 @@ def all_epics_transformed(cookie_team_key):
         if epic['key'].startswith(cookie_team_key):
             ptd = ''
             ptd_title = ''
+            ptd_status = ''
+            ptd_status_colour = ''
+
             for issuelinks in epic['fields']['issuelinks']:
                 if 'inwardIssue' in issuelinks:
                     inwardIssue = issuelinks['inwardIssue']
@@ -141,6 +144,8 @@ def all_epics_transformed(cookie_team_key):
                         if inwardIssue['key'].startswith('PTD'):
                             ptd = inwardIssue['key']
                             ptd_title = inwardIssue['fields']['summary']
+                            ptd_status = inwardIssue['fields']['status']['name']
+                            ptd_status_colour = colour_based_on_status(ptd_status)
                 # loop through to make sure its epic_number unique
                 exists = False
                 for item in result:
@@ -148,7 +153,10 @@ def all_epics_transformed(cookie_team_key):
                         exists = True
                         break
                 if not exists:
-                    result.append({"epic_title": epic['fields']['summary'], "epic_number": epic['key'], "ptd": ptd, "ptd_title": ptd_title})
+                    epic_status = epic['fields']['status']['name']
+                    epic_status_colour = colour_based_on_status(epic_status)
+
+                    result.append({"epic_title": epic['fields']['summary'], "epic_number": epic['key'], "ptd": ptd, "ptd_title": ptd_title, "ptd_status": ptd_status, "ptd_colour": ptd_status_colour, "epic_status": epic_status, "epic_status_colour": epic_status_colour})
     return result
 
 def all_ptds_transformed(cookie_team_key):
@@ -159,6 +167,8 @@ def all_ptds_transformed(cookie_team_key):
         if epic['key'].startswith(cookie_team_key):
             ptd = ''
             ptd_title = ''
+            ptd_status = ''
+            ptd_status_colour = ''
             for issuelinks in epic['fields']['issuelinks']:
                 if 'inwardIssue' in issuelinks:
                     inwardIssue = issuelinks['inwardIssue']
@@ -166,6 +176,8 @@ def all_ptds_transformed(cookie_team_key):
                         if inwardIssue['key'].startswith('PTD'):
                             ptd = inwardIssue['key']
                             ptd_title = inwardIssue['fields']['summary']
+                            ptd_status = inwardIssue['fields']['status']['name']
+                            ptd_status_colour = colour_based_on_status(ptd_status)
                             # loop through to make sure its ptd is unique
                             exists = False
                             for item in result:
@@ -173,7 +185,7 @@ def all_ptds_transformed(cookie_team_key):
                                     exists = True
                                     breakpoint
                             if not exists:
-                                result.append({"ptd": ptd, "ptd_title": ptd_title})
+                                result.append({"ptd": ptd, "ptd_title": ptd_title, "ptd_status": ptd_status, "colour": ptd_status_colour})
     return result
 
 # gets all the issues for a given epic
@@ -184,13 +196,13 @@ def api_get_epic_issues(cookie_team_key, epic_number):
     if cookie_team_key is None:
         return redirect("/check_team")
     issues_in_epic=[]
-    if cookie_team_key.upper().startswith(cookie_team_key.upper()):
-        issues_in_epic = get_issues_from_epics(epic_number.upper())
+    # if cookie_team_key.upper().startswith(cookie_team_key.upper()):
+    issues_in_epic = get_issues_from_epics(epic_number.upper())
     return jsonify(issues_in_epic)
 
 # gets all the unique ptds
 @api_urls.route('/api/ptds/<cookie_team_key>')
-@cache.cached(timeout=1800)
+@cache.cached(timeout=86400)
 def api_get_ptds(cookie_team_key=""):
     if cookie_team_key == "":
         cookie_team_key = request.cookies.get('team_key')
@@ -218,24 +230,27 @@ def api_get_ptd_epics(cookie_team_key, ptd_number):
                     result.append({"epic_title": outwardIssue['fields']['summary'], "epic_number": outwardIssue['key']})
     return jsonify(result)
 
+@cache.cached(timeout=86400)
 def get_issues_from_epics(epic_number):
     result = get_using_custom_query('"Epic%20Link"='+str(epic_number.upper()))
     all_issues = []
     all_issues_2 = []
-    for issue in result['issues']:
-        issue = get_issue_details(issue['key'])
-        estimated_number = issue['fields']['customfield_10008']
-        estimated_number2 = issue['fields']['customfield_10008']
-        issue_status = issue['fields']['status']['name']
-        if estimated_number:
+    if 'issues' in result:
+        for issue in result['issues']:
+            issue = get_issue_details(issue['key'])
             estimated_number = issue['fields']['customfield_10008']
             estimated_number2 = issue['fields']['customfield_10008']
-        else:
-            estimated_number = "None provided"
-            estimated_number2 = 0
+            issue_status = issue['fields']['status']['name']
+            if estimated_number:
+                estimated_number = issue['fields']['customfield_10008']
+                estimated_number2 = issue['fields']['customfield_10008']
+            else:
+                estimated_number = "None provided"
+                estimated_number2 = 0
 
-        all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status})
-        all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status})
+            all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status})
+            all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status})
+    
     status_totals = dict()
     grouped_status_total = group_tickets_by_issue_status(all_issues_2, "total")
     status_totals["status_totals"] = grouped_status_total

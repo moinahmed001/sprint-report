@@ -39,3 +39,41 @@ def suffix(d):
 
 def custom_strftime(format, t):
     return t.strftime(format).replace('{S}', str(t.day) + suffix(t.day))
+
+def colour_based_on_status(status):
+    mapping = {
+        "OPEN": "primary",
+        "TO DO": "primary",
+        "BACKLOGGED": "primary",
+        "IN REVISION": "primary",
+
+        "IN TRIAGE": "secondary",
+        "IN REFINEMENT": "secondary",
+        "IN BA REVIEW": "secondary",
+        "IN TDA REVIEW": "secondary",
+        "IN SOLUTION DESIGN": "secondary",
+        "IN REQ. VALIDATION": "secondary",
+
+        "BLOCKED": "danger",
+        "QA BLOCKED": "danger",
+        "ON HOLD": "danger",
+
+        "IN IA": "warning",
+        "IN PLANNING": "warning",
+        "IN DEV": "warning",
+        "IN PROGRESS": "warning",
+        "IN REVIEW": "warning",
+
+        "IN QA": "dark",
+        "READY FOR QA": "dark",
+        "IN ROLLOUT": "dark",
+        "IN DELIVERY": "dark",
+
+        "CANCELLED": "success",
+        "UAT READY": "success",
+        "CLOSED": "success",
+        "DONE": "success"
+        }
+    if status.upper() in mapping:
+        return mapping[status.upper()]
+    return ""

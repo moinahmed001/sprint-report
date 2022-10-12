@@ -46,7 +46,6 @@
 <body>
 
     {% include 'include/nav.html' %}
-    <!-- //TODO: replace all ptd_title with single quote -->
         <h1 class="mt-4">
             {% if sprint_tickets.state != "FUTURE" %}
                 <a href="{{sprint_report_url}}" target="_blank">{{sprint_tickets.name}}</a>

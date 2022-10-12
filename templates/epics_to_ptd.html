@@ -21,7 +21,7 @@
 
             {% include 'include/nav.html' %}
             <h1 class="mt-4">Epics to PTDs mapping</h1>
-            <!-- <h3>TODO: - colour the tab based on the status and show the current status of the PTD</h3> -->
+
             <input class="form-control" id="myInput" type="text" placeholder="Search..">
             <table class="table table-bordered table-hover">
                 <tbody>
@@ -33,12 +33,12 @@
                     <tr>
                         <td>
                             <a href="{{url}}/browse/{{epics_to_ptd.epic_number}}">
-                                {{epics_to_ptd.epic_number}}: {{epics_to_ptd.epic_title}}</a>
+                                {{epics_to_ptd.epic_number}}: {{epics_to_ptd.epic_title}}</a> <span class="badge badge-{{epics_to_ptd.epic_status_colour}}">{{epics_to_ptd.epic_status}}</span>
                         </td>
                         <td>
                             {% if epics_to_ptd.ptd %}
                             <a href="{{url}}/browse/{{epics_to_ptd.ptd}}">
-                                {{epics_to_ptd.ptd}}: {{epics_to_ptd.ptd_title}}</a>
+                                {{epics_to_ptd.ptd}}: {{epics_to_ptd.ptd_title}}</a> <span class="badge badge-{{epics_to_ptd.ptd_colour}}">{{epics_to_ptd.ptd_status}}</span>
                                 {% else %}&nbsp;{% endif %}
                         </td>
                     </tr>

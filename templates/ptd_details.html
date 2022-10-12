@@ -81,7 +81,6 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <!-- TODO: colour the tab based on the status and show the current status of the PTD -->
                                 <th scope="col">PTD</th> 
                             </tr>
                         </thead>
@@ -90,7 +89,7 @@
                             <tr>
                                 <td>
                                     <a href="#" id="{{ptd.ptd}}" onclick="getEpics(this);" class="ptds">
-                                        {{ptd.ptd}}: {{ptd.ptd_title}}</a>
+                                        {{ptd.ptd}}: {{ptd.ptd_title}}</a> <span class="badge badge-{{ptd.colour}}">{{ptd.ptd_status}}</span>
                                 </td>
                             </tr>
                             {% endfor %}
