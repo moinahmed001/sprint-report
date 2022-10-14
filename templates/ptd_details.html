@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="Moin Ahmed">
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico">
 
     <title>PTD Details</title>
 
@@ -28,7 +29,7 @@
                     if (result.length > 0){
                         $("#epic_details_table").show()
                         $.each(result, function() {
-                            $("#epic_details").append("<tr><td><a href='#' id='"+this.epic_number+"' onclick='getIssues(this)'>"+this.epic_number+": "+this.epic_title+"</a></td></tr>");
+                            $("#epic_details").append("<tr><td><a href='#' id='"+this.epic_number+"' onclick='getIssues(this)'>"+this.epic_number+": "+this.epic_title+"</a> <span class='badge badge-"+this.epic_status_colour+"'>"+this.epic_status+"</span> </td></tr>");
                         });
                     } else {
                         $("#epic_details").html("<tr><td>No epic was found</td></tr>");
@@ -48,18 +49,18 @@
                         var total = 0;
                         $.each(result, function() {
                             if(this.issue_number){
-                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.issue_number+"</a></td><td> "+this.estimated+"</td></tr>");
+                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.issue_number+"</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td></tr>");
                                 if ($.isNumeric(this.estimated)){
                                     total = total+this.estimated
                                 }
                             }
                             if(this.status_totals){
                                 $.each(this.status_totals, function(){
-                                    $("#issue_details").append("<tr class='table-info'><td>"+this.status+"</td><td> "+this.total+"</td></tr>");
+                                    $("#issue_details").append("<tr class='bg-"+this.status_colour+"' style='color: white;'><td>"+this.status+"</td><td> "+this.total+"</td></tr>");
                                 })
                             }
                         });
-                        $("#issue_details").append("<tr class='table-success'><td>Total</td><td>"+total+"</td></tr>");
+                        $("#issue_details").append("<tr><td>Total</td><td>"+total+"</td></tr>");
                     } else {
                         $("#issue_details").html("<tr><td colspan='2'>No issue was found</td></tr>");
                     }

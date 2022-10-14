@@ -227,7 +227,8 @@ def api_get_ptd_epics(cookie_team_key, ptd_number):
             outwardIssue = issuelinks['outwardIssue']
             if 'key' in outwardIssue:
                 if outwardIssue['key'].startswith(cookie_team_key.upper()):
-                    result.append({"epic_title": outwardIssue['fields']['summary'], "epic_number": outwardIssue['key']})
+                    epic_status = outwardIssue['fields']['status']['name']
+                    result.append({"epic_title": outwardIssue['fields']['summary'], "epic_number": outwardIssue['key'], "epic_status": epic_status, "epic_status_colour": colour_based_on_status(epic_status)})
     return jsonify(result)
 
 @cache.cached(timeout=86400)
@@ -248,7 +249,7 @@ def get_issues_from_epics(epic_number):
                 estimated_number = "None provided"
                 estimated_number2 = 0
 
-            all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status})
+            all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status)})
             all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status})
     
     status_totals = dict()
@@ -264,6 +265,6 @@ def group_tickets_by_issue_status(tickets, key_name):
         if key == "":
             key = "No status Assigned"
         
-        result.append({"status":key, "total" :sum([int(float(item["estimated"])) for item in group])})
+        result.append({"status":key, "status_colour": colour_based_on_status(key), "total" :sum([int(float(item["estimated"])) for item in group])})
     return result
 
