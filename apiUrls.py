@@ -92,8 +92,11 @@ def create_ticket(issue, all_epics, cookie_team_key):
         epic_details['ptd'] = ptd_info['epic_number']
 
 # Setting estimate value
+    if 'currentEstimateStatistic' not in issue or 'statFieldValue' not in issue['currentEstimateStatistic']:
+        issue['currentEstimateStatistic']={}
+        issue['currentEstimateStatistic']['statFieldValue']={}
     if 'value' not in issue['currentEstimateStatistic']['statFieldValue']:
-        issue['currentEstimateStatistic']['statFieldValue']['value'] = ""
+        issue['currentEstimateStatistic']['statFieldValue']['value'] = ""        
 
     
     if 'epic' in issue:
