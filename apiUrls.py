@@ -72,13 +72,18 @@ def transformed_sprint_with_id(sprintId, cookie_team_id, cookie_team_view_id, co
 # not_completed_tickets!!!
     for issue in full_sprint['contents']['issuesNotCompletedInCurrentSprint']:
         ticket = create_ticket(issue, all_epics, cookie_team_key)
+        cloned_ticket = create_ticket(issue, all_epics, cookie_team_key, True)
         not_completed_tickets.append(ticket)
+        if cloned_ticket['spillover_completed'] > 0:
+            cloned_ticket['estimate'] = cloned_ticket['spillover_completed']
+            cloned_ticket['title'] = "[SOME WORK WAS DONE] - " + cloned_ticket['title']
+            completed_tickets.append(cloned_ticket)
 
     data['not_completed_tickets']=not_completed_tickets
 
     return data
 
-def create_ticket(issue, all_epics, cookie_team_key):
+def create_ticket(issue, all_epics, cookie_team_key, create_spillover_completed=False):
     epic_details = {"epic_title": "", "ptd":"", "ptd_title": ""}
     if 'epic' not in issue:
         issue['epic'] = ""
@@ -98,6 +103,13 @@ def create_ticket(issue, all_epics, cookie_team_key):
     if 'value' not in issue['currentEstimateStatistic']['statFieldValue']:
         issue['currentEstimateStatistic']['statFieldValue']['value'] = ""        
 
+# Setting original estimate value
+    if 'estimateStatistic' not in issue or 'statFieldValue' not in issue['estimateStatistic']:
+        issue['estimateStatistic']={}
+        issue['estimateStatistic']['statFieldValue']={}
+    if 'value' not in issue['currentEstimateStatistic']['statFieldValue']:
+        issue['estimateStatistic']['statFieldValue']['value'] = ""        
+
     
     if 'epic' in issue:
         found = False
@@ -115,7 +127,37 @@ def create_ticket(issue, all_epics, cookie_team_key):
     else:
         estimate = issue['currentEstimateStatistic']['statFieldValue']['value']
 
-    return {"ticket_number": issue['key'], "title": issue['summary'],"estimate": estimate, "epic_number": epic_number, "epic_title": epic_details["epic_title"], "ptd_title": epic_details["ptd_title"], "ptd": epic_details["ptd"]}
+    try:
+        original_estimate = 0
+        if 'value' in issue['currentEstimateStatistic']['statFieldValue']:
+            if issue['estimateStatistic']['statFieldValue']['value'] == "":
+                original_estimate = 0
+            else:
+                original_estimate = issue['estimateStatistic']['statFieldValue']['value']
+    except KeyError:
+        print('key value not found')
+    spillover_completed = 0
+    if create_spillover_completed and original_estimate > estimate:
+        spillover_completed = original_estimate - estimate
+
+# set the original estimate
+    
+
+    # originalEstimate = 0
+    # remainingEstimate = 0
+    # qaEstimate = 0
+    # if 'timetracking' in issue:
+    #     if 'originalEstimateSeconds' in issue['timetracking']:
+    #         originalEstimate = issue['timetracking']['originalEstimateSeconds']
+    #     if 'remainingEstimateSeconds' in issue['remainingEstimateSeconds']:
+    #         remainingEstimate = issue['timetracking']['remainingEstimateSeconds']
+# set the remaining estimate
+
+# set the QA estimate
+    # if 'customfield_15315' in issue:
+    #     qaEstimate = issue['customfield_15315']
+
+    return {"ticket_number": issue['key'], "title": issue['summary'],"estimate": estimate, "epic_number": epic_number, "epic_title": epic_details["epic_title"], "ptd_title": epic_details["ptd_title"], "ptd": epic_details["ptd"], "original_estimate": original_estimate, "spillover_completed": spillover_completed}
 
 # gets all unique epics and its ptd
 @api_urls.route('/api/epics/<cookie_team_key>')

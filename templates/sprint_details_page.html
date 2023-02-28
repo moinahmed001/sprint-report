@@ -145,7 +145,7 @@
                 {% for issue in sprint_tickets.not_completed_tickets %}
                 <tr>
                     <td><a href="{{url}}/browse/{{issue.ticket_number}}" target="_blank"><u><strong>{{issue.ticket_number}}</strong></u>: {{issue.title}}</a></td>
-                    <td>{{issue.estimate}}</td>
+                    <td>{{issue.original_estimate}} -> {{issue.estimate}}</td>
                     <td>{% if issue.epic_number %}<a href="{{url}}/browse/{{issue.epic_number}}" target="_blank"><u><strong>{{issue.epic_number}}</strong></u>: {{issue.epic_title}}</a>{% endif %}</td>
                     <td>{% if issue.ptd %}<a href="{{url}}/browse/{{issue.ptd}}" target="_blank"><u><strong>{{issue.ptd}}</strong></u>: {{issue.ptd_title}}</a>{% endif %}</td>
                 </tr>
