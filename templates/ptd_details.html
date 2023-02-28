@@ -43,24 +43,32 @@
                 $("#issue_details_table").show()
                 // get all available boards
                 $.get("/api/epic_issues/"+ getCookie("team_key")+"/" + epic_number, function(result){
-                    
+
                     if (result.length > 0){
                         $("#issue_details").html("");
                         var total = 0;
+                        var total_original_estimate = 0;
+                        var total_aggregated_done = 0;
                         $.each(result, function() {
                             if(this.issue_number){
-                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.issue_number+"</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td></tr>");
+                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.issue_number+"</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td><td>"+this.original_estimate+"</td><td>"+this.aggregated_done+"</td></tr>");
                                 if ($.isNumeric(this.estimated)){
                                     total = total+this.estimated
+                                }
+                                if ($.isNumeric(this.original_estimate)){
+                                    total_original_estimate = total_original_estimate+this.original_estimate
+                                }
+                                if ($.isNumeric(this.aggregated_done)){
+                                    total_aggregated_done = total_aggregated_done+this.aggregated_done
                                 }
                             }
                             if(this.status_totals){
                                 $.each(this.status_totals, function(){
-                                    $("#issue_details").append("<tr class='bg-"+this.status_colour+"' style='color: white;'><td>"+this.status+"</td><td> "+this.total+"</td></tr>");
+                                    $("#issue_details").append("<tr><td>"+this.status+"</td><td class='bg-"+this.status_colour+"' style='color: white;'> "+this.total+"</td><td class='bg-"+this.status_colour+"' style='color: white;'>"+this.total_original_estimate+"</td><td>"+this.total_aggregated_done+"</td></tr>");
                                 })
                             }
                         });
-                        $("#issue_details").append("<tr><td>Total</td><td>"+total+"</td></tr>");
+                        $("#issue_details").append("<tr><td>Total</td><td>"+total+"</td><td>"+total_original_estimate+"</td><td class='bg-success' style='color: white;'>"+total_aggregated_done+"</td></tr>");
                     } else {
                         $("#issue_details").html("<tr><td colspan='2'>No issue was found</td></tr>");
                     }
@@ -114,7 +122,9 @@
                         <thead>
                             <tr>
                                 <th scope="col">Issue</th> 
-                                <th scope="col">Estimate</th> 
+                                <th scope="col">Remaining Estimate</th> 
+                                <th scope="col">Original Estimate</th> 
+                                <th scope="col">Aggregated Done</th> 
                             </tr>
                         </thead>
                         <tbody id="issue_details">
@@ -136,8 +146,8 @@
             });
             $('#epic_details_table').hide();
             $('#issue_details_table').hide();
-        }); 
-    </script>           
+        });
+    </script>
 </body>
 
 </html>

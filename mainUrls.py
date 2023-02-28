@@ -89,7 +89,7 @@ def sprint_details_page(sprintId):
         if found is False:
             not_completed_project["completed_value"] = 0
             grouped_completed_ptds.append(not_completed_project)
-    
+
     total_effort = {"completed_effort": 0, "not_completed_effort": 0}
 
     for ptds in grouped_completed_ptds:

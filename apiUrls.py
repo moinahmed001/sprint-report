@@ -140,19 +140,6 @@ def create_ticket(issue, all_epics, cookie_team_key, create_spillover_completed=
     if create_spillover_completed and original_estimate > estimate:
         spillover_completed = original_estimate - estimate
 
-# set the original estimate
-    
-
-    # originalEstimate = 0
-    # remainingEstimate = 0
-    # qaEstimate = 0
-    # if 'timetracking' in issue:
-    #     if 'originalEstimateSeconds' in issue['timetracking']:
-    #         originalEstimate = issue['timetracking']['originalEstimateSeconds']
-    #     if 'remainingEstimateSeconds' in issue['remainingEstimateSeconds']:
-    #         remainingEstimate = issue['timetracking']['remainingEstimateSeconds']
-# set the remaining estimate
-
 # set the QA estimate
     # if 'customfield_15315' in issue:
     #     qaEstimate = issue['customfield_15315']
@@ -293,23 +280,48 @@ def get_issues_from_epics(epic_number):
             else:
                 estimated_number = "None provided"
                 estimated_number2 = 0
+            original_estimated_number = issue['fields']['timeoriginalestimate']
+            if original_estimated_number:
+                original_estimate = (original_estimated_number/60/60/8)
+            else:
+                original_estimate = 0
+            aggregated_done = 0
+            if int(float(original_estimate)) > int(float(estimated_number2)):
+                aggregated_done = original_estimate - estimated_number2
 
-            all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status)})
-            all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status})
+            all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done})
+            all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status, "original_estimate": original_estimate, "aggregated_done": aggregated_done})
     
     status_totals = dict()
-    grouped_status_total = group_tickets_by_issue_status(all_issues_2, "total")
+
+
+    grouped_status_total = group_tickets_by_issue_status(all_issues_2)
     status_totals["status_totals"] = grouped_status_total
     all_issues.append(status_totals)
     return all_issues
 
-def group_tickets_by_issue_status(tickets, key_name):
+def group_tickets_by_issue_status(tickets):
     tickets.sort(key=itemgetter("issue_status"))
     result = []
     for key, group in itertools.groupby(tickets, lambda item: item["issue_status"]):
         if key == "":
             key = "No status Assigned"
-        
-        result.append({"status":key, "status_colour": colour_based_on_status(key), "total" :sum([int(float(item["estimated"])) for item in group])})
+        total_original_estimate = 0
+        total_estimate = 0
+        total_aggregated_done = 0
+
+        for item in group:
+            total_original_estimate += int(float(item["original_estimate"]))
+            total_estimate += int(float(item["estimated"]))
+            total_aggregated_done += int(float(item["aggregated_done"]))
+
+        result.append({
+            "status":key,
+            "status_colour": colour_based_on_status(key),
+            "total" :total_estimate,
+            "total_aggregated_done" :total_aggregated_done,
+            "total_original_estimate": total_original_estimate
+            })
+
     return result
 

@@ -62,7 +62,7 @@ def colour_based_on_status(status):
         "IN PLANNING": "warning",
         "IN DEV": "warning",
         "IN PROGRESS": "warning",
-        "IN REVIEW": "warning",
+        "IN REVIEW": "light text-warning",
 
         "IN QA": "dark",
         "READY FOR QA": "dark",
