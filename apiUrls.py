@@ -289,9 +289,20 @@ def get_issues_from_epics(epic_number):
             if int(float(original_estimate)) > int(float(estimated_number2)):
                 aggregated_done = original_estimate - estimated_number2
 
-            all_issues.append({"issue_number":issue['key'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done})
+            blocked_by_issues = []
+            all_issue_links = issue['fields']['issuelinks']
+            for issue_link in all_issue_links:
+                if issue_link['type']['inward'] == 'is blocked by':
+                    if 'inwardIssue' in issue_link:
+                        if 'key' in issue_link['inwardIssue']:
+                            blocked_by_issue_number = issue_link['inwardIssue']['key']
+                            blocked_by_issue_title = issue_link['inwardIssue']['fields']['summary']
+
+                            blocked_by_issues.append({"blocked_by_issue_number": blocked_by_issue_number, "blocked_by_issue_title": blocked_by_issue_title})
+
+            all_issues.append({"issue_number":issue['key'], "title": issue['fields']['summary'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done, "blocked_by_issues": blocked_by_issues})
             all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status, "original_estimate": original_estimate, "aggregated_done": aggregated_done})
-    
+
     status_totals = dict()
 
 

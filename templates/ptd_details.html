@@ -21,7 +21,7 @@
                 var domElement =$(event.target);
                 ptd = domElement.attr('id')
                 $('#issue_details_table').hide();
-                $("#epic_details").html("<tr><td>Loading...</td></tr>");
+                $("#epic_details").html("<tr><td colspan='4'><h2>Loading...</h2></td></tr>");
                 $("#epic_details_table").show()
                 // get all available boards
                 $.get("/api/ptd/epics/"+ getCookie("team_key")+"/" + ptd, function(result){
@@ -51,7 +51,11 @@
                         var total_aggregated_done = 0;
                         $.each(result, function() {
                             if(this.issue_number){
-                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.issue_number+"</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td><td>"+this.original_estimate+"</td><td>"+this.aggregated_done+"</td></tr>");
+                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.title+" ("+ this.issue_number +")</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td><td>"+this.original_estimate+"</td><td>"+this.aggregated_done+"</td></tr>");
+                                $.each(this.blocked_by_issues, function(){
+                                    $("#issue_details").append("<tr><td>Is blocked by </td><td colspan='3'><a href='{{url}}/browse/"+this.blocked_by_issue_number+"' target='_blank'>"+this.blocked_by_issue_title+" ("+this.blocked_by_issue_number+")</a></td></tr>");
+                                })
+
                                 if ($.isNumeric(this.estimated)){
                                     total = total+this.estimated
                                 }
@@ -63,12 +67,13 @@
                                 }
                             }
                             if(this.status_totals){
+                                $("#issue_details").append("<tr style='border: 2pm white solid'><td colspan='4'>&nbsp;</td></tr> ");
                                 $.each(this.status_totals, function(){
-                                    $("#issue_details").append("<tr><td>"+this.status+"</td><td class='bg-"+this.status_colour+"' style='color: white;'> "+this.total+"</td><td class='bg-"+this.status_colour+"' style='color: white;'>"+this.total_original_estimate+"</td><td>"+this.total_aggregated_done+"</td></tr>");
+                                    $("#issue_details").append("<tr style='border-top: 2px black solid'><td>"+this.status+"</td><td class='bg-"+this.status_colour+"' style='color: white;'> "+this.total+"</td><td class='bg-"+this.status_colour+"' style='color: white;'>"+this.total_original_estimate+"</td><td>"+this.total_aggregated_done+"</td></tr>");
                                 })
                             }
                         });
-                        $("#issue_details").append("<tr><td>Total</td><td>"+total+"</td><td>"+total_original_estimate+"</td><td class='bg-success' style='color: white;'>"+total_aggregated_done+"</td></tr>");
+                        $("#issue_details").append("<tr style='border-top: 4px #004085 solid'><td>Total</td><td>"+total+"</td><td>"+total_original_estimate+"</td><td class='bg-success' style='color: white;'>"+total_aggregated_done+"</td></tr>");
                     } else {
                         $("#issue_details").html("<tr><td colspan='2'>No issue was found</td></tr>");
                     }
@@ -81,7 +86,7 @@
 
             {% include 'include/nav.html' %}
             <h1 class="mt-4">PTD Details</h1>
-            <div class="container">
+            <!-- <div class="container"> -->
                 <div class="row">
                     <div class="col-sm">
 
@@ -117,11 +122,11 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="col-sm">
-                    <table class="table table-bordered table-hover" id="issue_details_table">
+                <div class="col-6 table-responsive">
+                    <table class="table table-bordered table-hover w-auto table-sm" id="issue_details_table">
                         <thead>
                             <tr>
-                                <th scope="col">Issue</th> 
+                                <th scope="col-6">Issue</th> 
                                 <th scope="col">Remaining Estimate</th> 
                                 <th scope="col">Original Estimate</th> 
                                 <th scope="col">Aggregated Done</th> 
@@ -132,7 +137,7 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            <!-- </div> -->
 
     {% include 'include/bottom-js.html' %}
 
