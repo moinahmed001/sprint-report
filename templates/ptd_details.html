@@ -20,8 +20,8 @@
             function getEpics(e){
                 var domElement =$(event.target);
                 ptd = domElement.attr('id')
-                $('#issue_details_table').hide();
-                $("#epic_details").html("<tr><td colspan='4'><h2>Loading...</h2></td></tr>");
+                $('#issue_details_table').parent().hide();
+                $("#epic_details").html("<tr><td><h2>Loading...</h2></td></tr>");
                 $("#epic_details_table").show()
                 // get all available boards
                 $.get("/api/ptd/epics/"+ getCookie("team_key")+"/" + ptd, function(result){
@@ -39,8 +39,8 @@
             function getIssues(e){
                 var domElement =$(event.target);
                 epic_number = domElement.attr('id')
-                $("#issue_details").html("<tr><td colspan='2'>Loading...</td></tr>");
-                $("#issue_details_table").show()
+                $("#issue_details").html("<tr><td colspan='4'><h2>Loading...</h2></td></tr>");
+                $("#issue_details_table").parent().show()
                 // get all available boards
                 $.get("/api/epic_issues/"+ getCookie("team_key")+"/" + epic_number, function(result){
 
@@ -53,7 +53,7 @@
                             if(this.issue_number){
                                 $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.title+" ("+ this.issue_number +")</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td><td>"+this.original_estimate+"</td><td>"+this.aggregated_done+"</td></tr>");
                                 $.each(this.blocked_by_issues, function(){
-                                    $("#issue_details").append("<tr><td>Is blocked by </td><td colspan='3'><a href='{{url}}/browse/"+this.blocked_by_issue_number+"' target='_blank'>"+this.blocked_by_issue_title+" ("+this.blocked_by_issue_number+")</a></td></tr>");
+                                    $("#issue_details").append("<tr><td colspan='4'>Is blocked by: <a href='{{url}}/browse/"+this.blocked_by_issue_number+"' target='_blank'>"+this.blocked_by_issue_title+" ("+this.blocked_by_issue_number+")</a></td></tr>");
                                 })
 
                                 if ($.isNumeric(this.estimated)){
@@ -87,8 +87,8 @@
             {% include 'include/nav.html' %}
             <h1 class="mt-4">PTD Details</h1>
             <!-- <div class="container"> -->
-                <div class="row">
-                    <div class="col-sm">
+            <div class="row">
+                <div class="col-3">
 
                     <input class="form-control" id="myInput" type="text" placeholder="Search..">
 
@@ -110,7 +110,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="col-sm">
+                <div class="col-9">
                     <table class="table table-bordered table-hover" id="epic_details_table">
                         <thead>
                             <tr>
@@ -121,23 +121,25 @@
 
                         </tbody>
                     </table>
-                </div>
-                <div class="col-6 table-responsive">
-                    <table class="table table-bordered table-hover w-auto table-sm" id="issue_details_table">
-                        <thead>
-                            <tr>
-                                <th scope="col-6">Issue</th> 
-                                <th scope="col">Remaining Estimate</th> 
-                                <th scope="col">Original Estimate</th> 
-                                <th scope="col">Aggregated Done</th> 
-                            </tr>
-                        </thead>
-                        <tbody id="issue_details">
+                    <div class="row">
+                        <div class="col-sm table-responsive" style="padding-top: 10px;border-top: 13px black double; padding-bottom: 10px;border-bottom: 13px black double; border-radius: 44px;">
+                            <table class="table table-bordered table-hover w-auto table-sm" id="issue_details_table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col-8">Issue</th> 
+                                        <th scope="col">Remaining Estimate</th> 
+                                        <th scope="col">Original Estimate</th> 
+                                        <th scope="col">Aggregated Done</th> 
+                                    </tr>
+                                </thead>
+                                <tbody id="issue_details">
 
-                        </tbody>
-                    </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            <!-- </div> -->
+            </div>
 
     {% include 'include/bottom-js.html' %}
 
@@ -150,7 +152,7 @@
                 });
             });
             $('#epic_details_table').hide();
-            $('#issue_details_table').hide();
+            $('#issue_details_table').parent().hide();
         });
     </script>
 </body>

@@ -229,7 +229,7 @@ def api_get_epic_issues(cookie_team_key, epic_number):
         return redirect("/check_team")
     issues_in_epic=[]
     # if cookie_team_key.upper().startswith(cookie_team_key.upper()):
-    issues_in_epic = get_issues_from_epics(epic_number.upper())
+    issues_in_epic = get_issues_from_epics(epic_number.upper(), cookie_team_key)
     return jsonify(issues_in_epic)
 
 # gets all the unique ptds
@@ -264,44 +264,45 @@ def api_get_ptd_epics(cookie_team_key, ptd_number):
     return jsonify(result)
 
 @cache.cached(timeout=86400)
-def get_issues_from_epics(epic_number):
+def get_issues_from_epics(epic_number, cookie_team_key):
     result = get_using_custom_query('"Epic%20Link"='+str(epic_number.upper()))
     all_issues = []
     all_issues_2 = []
     if 'issues' in result:
         for issue in result['issues']:
-            issue = get_issue_details(issue['key'])
-            estimated_number = issue['fields']['customfield_10008']
-            estimated_number2 = issue['fields']['customfield_10008']
-            issue_status = issue['fields']['status']['name']
-            if estimated_number:
+            if issue['key'].startswith(cookie_team_key):
+                issue = get_issue_details(issue['key'])
                 estimated_number = issue['fields']['customfield_10008']
                 estimated_number2 = issue['fields']['customfield_10008']
-            else:
-                estimated_number = "None provided"
-                estimated_number2 = 0
-            original_estimated_number = issue['fields']['timeoriginalestimate']
-            if original_estimated_number:
-                original_estimate = (original_estimated_number/60/60/8)
-            else:
-                original_estimate = 0
-            aggregated_done = 0
-            if int(float(original_estimate)) > int(float(estimated_number2)):
-                aggregated_done = original_estimate - estimated_number2
+                issue_status = issue['fields']['status']['name']
+                if estimated_number:
+                    estimated_number = issue['fields']['customfield_10008']
+                    estimated_number2 = issue['fields']['customfield_10008']
+                else:
+                    estimated_number = "None provided"
+                    estimated_number2 = 0
+                original_estimated_number = issue['fields']['timeoriginalestimate']
+                if original_estimated_number:
+                    original_estimate = (original_estimated_number/60/60/8)
+                else:
+                    original_estimate = 0
+                aggregated_done = 0
+                if int(float(original_estimate)) > int(float(estimated_number2)):
+                    aggregated_done = original_estimate - estimated_number2
 
-            blocked_by_issues = []
-            all_issue_links = issue['fields']['issuelinks']
-            for issue_link in all_issue_links:
-                if issue_link['type']['inward'] == 'is blocked by':
-                    if 'inwardIssue' in issue_link:
-                        if 'key' in issue_link['inwardIssue']:
-                            blocked_by_issue_number = issue_link['inwardIssue']['key']
-                            blocked_by_issue_title = issue_link['inwardIssue']['fields']['summary']
+                blocked_by_issues = []
+                all_issue_links = issue['fields']['issuelinks']
+                for issue_link in all_issue_links:
+                    if issue_link['type']['inward'] == 'is blocked by':
+                        if 'inwardIssue' in issue_link:
+                            if 'key' in issue_link['inwardIssue']:
+                                blocked_by_issue_number = issue_link['inwardIssue']['key']
+                                blocked_by_issue_title = issue_link['inwardIssue']['fields']['summary']
 
-                            blocked_by_issues.append({"blocked_by_issue_number": blocked_by_issue_number, "blocked_by_issue_title": blocked_by_issue_title})
+                                blocked_by_issues.append({"blocked_by_issue_number": blocked_by_issue_number, "blocked_by_issue_title": blocked_by_issue_title})
 
-            all_issues.append({"issue_number":issue['key'], "title": issue['fields']['summary'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done, "blocked_by_issues": blocked_by_issues})
-            all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status, "original_estimate": original_estimate, "aggregated_done": aggregated_done})
+                all_issues.append({"issue_number":issue['key'], "title": issue['fields']['summary'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done, "blocked_by_issues": blocked_by_issues})
+                all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status, "original_estimate": original_estimate, "aggregated_done": aggregated_done})
 
     status_totals = dict()
 
