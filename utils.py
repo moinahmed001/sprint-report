@@ -48,6 +48,7 @@ def colour_based_on_status(status):
         "IN REVISION": "primary",
 
         "IN TRIAGE": "secondary",
+        "TRIAGE": "secondary",
         "IN REFINEMENT": "secondary",
         "IN BA REVIEW": "secondary",
         "IN TDA REVIEW": "secondary",

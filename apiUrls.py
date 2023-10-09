@@ -178,6 +178,15 @@ def all_epics_transformed(cookie_team_key):
                             ptd_title = inwardIssue['fields']['summary']
                             ptd_status = inwardIssue['fields']['status']['name']
                             ptd_status_colour = colour_based_on_status(ptd_status)
+                
+                if ptd == '' and 'outwardIssue' in issuelinks:
+                    outwardIssue = issuelinks['outwardIssue']
+                    if 'key' in outwardIssue:
+                        if outwardIssue['key'].startswith('PTD'):
+                            ptd = outwardIssue['key']
+                            ptd_title = outwardIssue['fields']['summary']
+                            ptd_status = outwardIssue['fields']['status']['name']
+                            ptd_status_colour = colour_based_on_status(ptd_status)
                 # loop through to make sure its epic_number unique
                 exists = False
                 for item in result:
@@ -188,36 +197,38 @@ def all_epics_transformed(cookie_team_key):
                     epic_status = epic['fields']['status']['name']
                     epic_status_colour = colour_based_on_status(epic_status)
 
-                    result.append({"epic_title": epic['fields']['summary'], "epic_number": epic['key'], "ptd": ptd, "ptd_title": ptd_title, "ptd_status": ptd_status, "ptd_colour": ptd_status_colour, "epic_status": epic_status, "epic_status_colour": epic_status_colour})
+                # if ptd == '' and epic_status != 'Done':
+                result.append({"epic_title": epic['fields']['summary'], "epic_number": epic['key'], "ptd": ptd, "ptd_title": ptd_title, "ptd_status": ptd_status, "ptd_colour": ptd_status_colour, "epic_status": epic_status, "epic_status_colour": epic_status_colour})
     return result
+
 
 def all_ptds_transformed(cookie_team_key):
     all_epics = get_epics(cookie_team_key)
     result = []
-
-    for epic in all_epics['issues']:
-        if epic['key'].startswith(cookie_team_key):
-            ptd = ''
-            ptd_title = ''
-            ptd_status = ''
-            ptd_status_colour = ''
-            for issuelinks in epic['fields']['issuelinks']:
-                if 'inwardIssue' in issuelinks:
-                    inwardIssue = issuelinks['inwardIssue']
-                    if 'key' in inwardIssue:
-                        if inwardIssue['key'].startswith('PTD'):
-                            ptd = inwardIssue['key']
-                            ptd_title = inwardIssue['fields']['summary']
-                            ptd_status = inwardIssue['fields']['status']['name']
-                            ptd_status_colour = colour_based_on_status(ptd_status)
-                            # loop through to make sure its ptd is unique
-                            exists = False
-                            for item in result:
-                                if item['ptd'] == inwardIssue['key']:
-                                    exists = True
-                                    breakpoint
-                            if not exists:
-                                result.append({"ptd": ptd, "ptd_title": ptd_title, "ptd_status": ptd_status, "colour": ptd_status_colour})
+    if 'issues' in all_epics:
+        for epic in all_epics['issues']:
+            if epic['key'].startswith(cookie_team_key):
+                ptd = ''
+                ptd_title = ''
+                ptd_status = ''
+                ptd_status_colour = ''
+                for issuelinks in epic['fields']['issuelinks']:
+                    if 'inwardIssue' in issuelinks:
+                        inwardIssue = issuelinks['inwardIssue']
+                        if 'key' in inwardIssue:
+                            if inwardIssue['key'].startswith('PTD'):
+                                ptd = inwardIssue['key']
+                                ptd_title = inwardIssue['fields']['summary']
+                                ptd_status = inwardIssue['fields']['status']['name']
+                                ptd_status_colour = colour_based_on_status(ptd_status)
+                                # loop through to make sure its ptd is unique
+                                exists = False
+                                for item in result:
+                                    if item['ptd'] == inwardIssue['key']:
+                                        exists = True
+                                        breakpoint
+                                if not exists:
+                                    result.append({"ptd": ptd, "ptd_title": ptd_title, "ptd_status": ptd_status, "colour": ptd_status_colour})
     return result
 
 # gets all the issues for a given epic
@@ -263,30 +274,44 @@ def api_get_ptd_epics(cookie_team_key, ptd_number):
                     result.append({"epic_title": outwardIssue['fields']['summary'], "epic_number": outwardIssue['key'], "epic_status": epic_status, "epic_status_colour": colour_based_on_status(epic_status)})
     return jsonify(result)
 
-@cache.cached(timeout=86400)
+@cache.cached(timeout=3600)
 def get_issues_from_epics(epic_number, cookie_team_key):
-    result = get_using_custom_query('"Epic%20Link"='+str(epic_number.upper()))
+    result = get_using_custom_query('"Epic%20Link"='+str(epic_number.upper()) +' ORDER BY status, issuetype asc')
     all_issues = []
     all_issues_2 = []
     if 'issues' in result:
         for issue in result['issues']:
             if issue['key'].startswith(cookie_team_key):
                 issue = get_issue_details(issue['key'])
-                estimated_number = issue['fields']['customfield_10008']
-                estimated_number2 = issue['fields']['customfield_10008']
+                remaining_estimate = issue['fields']['progress']['total']
                 issue_status = issue['fields']['status']['name']
-                if estimated_number:
-                    estimated_number = issue['fields']['customfield_10008']
-                    estimated_number2 = issue['fields']['customfield_10008']
-                else:
-                    estimated_number = "None provided"
-                    estimated_number2 = 0
+                issue_type = issue['fields']['issuetype']['name']
+                priority = ''
+                if issue_type == 'Bug':
+                    priority = ' ' + issue['fields']['priority']['name']
+                
                 original_estimated_number = issue['fields']['timeoriginalestimate']
                 if original_estimated_number:
                     original_estimate = (original_estimated_number/60/60/8)
                 else:
                     original_estimate = 0
                 aggregated_done = 0
+
+
+
+                if remaining_estimate:
+                    if issue_status == 'Done':
+                        aggregated_done = original_estimate
+                    else:
+                        estimated_number = (remaining_estimate/60/60/8)
+                        estimated_number2 = (remaining_estimate/60/60/8)
+                elif issue_status == "Done":
+                    estimated_number = 0
+                    estimated_number2 = 0
+                else:
+                    estimated_number = "None provided"
+                    estimated_number2 = original_estimate
+
                 if int(float(original_estimate)) > int(float(estimated_number2)):
                     aggregated_done = original_estimate - estimated_number2
 
@@ -297,12 +322,21 @@ def get_issues_from_epics(epic_number, cookie_team_key):
                         if 'inwardIssue' in issue_link:
                             if 'key' in issue_link['inwardIssue']:
                                 blocked_by_issue_number = issue_link['inwardIssue']['key']
-                                blocked_by_issue_title = issue_link['inwardIssue']['fields']['summary']
+                                fields = issue_link['inwardIssue']['fields']
+                                blocked_by_issue_title = fields['summary']
+                                blocked_by_issue_type = fields['issuetype']['name'] + "(" + fields['priority']['name'] + ")"
+                                blocked_by_issue_status = fields['status']['name']
 
-                                blocked_by_issues.append({"blocked_by_issue_number": blocked_by_issue_number, "blocked_by_issue_title": blocked_by_issue_title})
 
-                all_issues.append({"issue_number":issue['key'], "title": issue['fields']['summary'], "estimated": estimated_number, "issue_status": issue_status, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done, "blocked_by_issues": blocked_by_issues})
-                all_issues_2.append({ "estimated": estimated_number2, "issue_status": issue_status, "original_estimate": original_estimate, "aggregated_done": aggregated_done})
+                                blocked_by_issues.append({"blocked_by_issue_colour": colour_based_on_status(blocked_by_issue_status), "blocked_by_issue_number": blocked_by_issue_number, "blocked_by_issue_status": blocked_by_issue_status, "blocked_by_issue_title": blocked_by_issue_title, "blocked_by_issue_type": blocked_by_issue_type})
+
+                all_issues.append({"issue_number":issue['key'], "title": issue['fields']['summary'], "remaining_estimate": estimated_number, "issue_status": issue_status, "issue_type": issue_type, "priority": priority, "issue_colour": colour_based_on_status(issue_status), "original_estimate": original_estimate, "aggregated_done": aggregated_done, "blocked_by_issues": blocked_by_issues})
+                
+                for label in issue['fields']['labels']:
+                    if label.upper() == "NOTBLOCKING":
+                        estimated_number = 0
+
+                all_issues_2.append({ "original_remaining_estimate": estimated_number, "remaining_estimate": estimated_number2, "issue_status": issue_status, "original_estimate": original_estimate, "aggregated_done": aggregated_done})
 
     status_totals = dict()
 
@@ -315,17 +349,21 @@ def get_issues_from_epics(epic_number, cookie_team_key):
 def group_tickets_by_issue_status(tickets):
     tickets.sort(key=itemgetter("issue_status"))
     result = []
+    counter = 0
     for key, group in itertools.groupby(tickets, lambda item: item["issue_status"]):
         if key == "":
             key = "No status Assigned"
         total_original_estimate = 0
         total_estimate = 0
         total_aggregated_done = 0
-
+        
         for item in group:
             total_original_estimate += int(float(item["original_estimate"]))
-            total_estimate += int(float(item["estimated"]))
+            total_estimate += int(float(item["remaining_estimate"]))
             total_aggregated_done += int(float(item["aggregated_done"]))
+
+            if item['original_remaining_estimate'] == "None provided" and (item['issue_status'].upper() == "TO DO" or item['issue_status'].upper() == "IN PROGRESS" or item['issue_status'].upper() == "BLOCKED" or item['issue_status'].upper() == "TRIAGE"):
+                counter = counter + 1
 
         result.append({
             "status":key,
@@ -334,6 +372,6 @@ def group_tickets_by_issue_status(tickets):
             "total_aggregated_done" :total_aggregated_done,
             "total_original_estimate": total_original_estimate
             })
-
+    result.append({"total_none_estimated": counter})
     return result
 

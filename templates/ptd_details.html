@@ -49,15 +49,24 @@
                         var total = 0;
                         var total_original_estimate = 0;
                         var total_aggregated_done = 0;
+                        var total_none_estimated = "";
                         $.each(result, function() {
                             if(this.issue_number){
-                                $("#issue_details").append("<tr><td><a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.title+" ("+ this.issue_number +")</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.estimated+"</td><td>"+this.original_estimate+"</td><td>"+this.aggregated_done+"</td></tr>");
+                                $("#issue_details").append("<tr><td data-toggle='tooltip' title='"+this.issue_status+"'><strong>"+this.issue_type+""+this.priority+"</strong>: <a href='{{url}}/browse/"+this.issue_number+"' target='_blank'>"+this.title+" ("+ this.issue_number +")</a></td><td class='bg-"+this.issue_colour+"' style='color: white;'> "+this.remaining_estimate+"</td><td>"+this.original_estimate+"</td><td>"+this.aggregated_done+"</td></tr>");
                                 $.each(this.blocked_by_issues, function(){
-                                    $("#issue_details").append("<tr><td colspan='4'>Is blocked by: <a href='{{url}}/browse/"+this.blocked_by_issue_number+"' target='_blank'>"+this.blocked_by_issue_title+" ("+this.blocked_by_issue_number+")</a></td></tr>");
+                                    var strikeS = ""
+                                    var strikeE = ""
+                                    var t = "Is"
+                                    if (this.blocked_by_issue_status == "Done"){
+                                        strikeS = "<s>"
+                                        strikeE = "</s>"
+                                        t = "Was"
+                                    }
+                                    $("#issue_details").append("<tr><td colspan='3' data-toggle='tooltip' title='"+this.blocked_by_issue_status+"'>"+t+" blocked by: "+strikeS+this.blocked_by_issue_type+": <a href='{{url}}/browse/"+this.blocked_by_issue_number+"' target='_blank'>"+this.blocked_by_issue_title+" ("+this.blocked_by_issue_number+")</a>"+strikeE+"</td><td class='bg-"+this.blocked_by_issue_colour+"' style='color: white;'>&nbsp;</td></tr>");
                                 })
 
-                                if ($.isNumeric(this.estimated)){
-                                    total = total+this.estimated
+                                if ($.isNumeric(this.remaining_estimate)){
+                                    total = total+this.remaining_estimate
                                 }
                                 if ($.isNumeric(this.original_estimate)){
                                     total_original_estimate = total_original_estimate+this.original_estimate
@@ -67,13 +76,20 @@
                                 }
                             }
                             if(this.status_totals){
-                                $("#issue_details").append("<tr style='border: 2pm white solid'><td colspan='4'>&nbsp;</td></tr> ");
+                                $("#issue_details").append("<tr style='border: 2pm white solid'><td colspan='4'>&nbsp;</td></tr><tr><th scope='col-8'>&nbsp;</th> <th scope='col'>Remaining Effort</th> <th scope='col'>Total Effort</th> <th scope='col'>Done</th></tr>");
                                 $.each(this.status_totals, function(){
-                                    $("#issue_details").append("<tr style='border-top: 2px black solid'><td>"+this.status+"</td><td class='bg-"+this.status_colour+"' style='color: white;'> "+this.total+"</td><td class='bg-"+this.status_colour+"' style='color: white;'>"+this.total_original_estimate+"</td><td>"+this.total_aggregated_done+"</td></tr>");
+                                    if (this.status){
+                                        $("#issue_details").append("<tr style='border-top: 2px black solid'><td>"+this.status+"</td><td class='bg-"+this.status_colour+"' style='color: white;'> "+this.total+"</td><td class='bg-"+this.status_colour+"' style='color: white;'>"+this.total_original_estimate+"</td><td>"+this.total_aggregated_done+"</td></tr>");
+                                    }
                                 })
+                                
+                                if(this.status_totals[this.status_totals.length-1].total_none_estimated){
+                                    total_none_estimated = " with number of ticket not estimated: " + this.status_totals[this.status_totals.length-1].total_none_estimated;
+                                }
                             }
                         });
-                        $("#issue_details").append("<tr style='border-top: 4px #004085 solid'><td>Total</td><td>"+total+"</td><td>"+total_original_estimate+"</td><td class='bg-success' style='color: white;'>"+total_aggregated_done+"</td></tr>");
+                        
+                        $("#issue_details").append("<tr style='border-top: 4px #004085 solid'><td>Total</td><td>"+total+total_none_estimated +"</td><td>"+total_original_estimate + "</td><td class='bg-success' style='color: white;'>"+total_aggregated_done+"</td></tr>");
                     } else {
                         $("#issue_details").html("<tr><td colspan='2'>No issue was found</td></tr>");
                     }
@@ -128,8 +144,8 @@
                                     <tr>
                                         <th scope="col-8">Issue</th> 
                                         <th scope="col">Remaining Estimate</th> 
-                                        <th scope="col">Original Estimate</th> 
-                                        <th scope="col">Aggregated Done</th> 
+                                        <th scope="col">Total Estimate</th> 
+                                        <th scope="col">Done</th> 
                                     </tr>
                                 </thead>
                                 <tbody id="issue_details">
@@ -137,6 +153,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        <!-- TODO: show the status in pie chart -->
                     </div>
                 </div>
             </div>

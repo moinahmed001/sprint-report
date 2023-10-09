@@ -4,6 +4,8 @@ from os import environ
 
 
 username = environ.get('API_USERNAME')
+if username is None:
+    username = 206703889
 password = environ.get('API_PASSWORD')
 
 headers = {'Authorization': str(username)+':'+str(password), 'Content-Type': 'application/json'}
@@ -41,6 +43,7 @@ def get_epics(cookie_team_key):
     return fetch_url(url + "/rest/api/2/search?jql=issuetype=Epic%20AND%20project="+str(cookie_team_key)+"&maxResults=200", headers=headers)
 
 def get_using_custom_query(query):
+    print(url + "/rest/api/2/search?jql="+str(query))
     return fetch_url(url + "/rest/api/2/search?jql="+str(query), headers=headers)
     # return fetch_url(url + "/rest/api/2/search?jql=Epic%20Link="+str(issueId), headers=headers)
 
